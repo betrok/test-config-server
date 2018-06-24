@@ -14,7 +14,7 @@ func TestMigration(t *testing.T) {
 
 	var migrations = []Migration{
 		{
-			ID: "shema",
+			ID: "schema",
 			Rerform: func(tx *gorm.DB) error {
 				return tx.CreateTable(&TestData{}).Error
 			},

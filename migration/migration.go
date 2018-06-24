@@ -25,7 +25,7 @@ type Migration struct {
 	Rollback func(tx *gorm.DB) error `gorm:"-"`
 }
 
-// baseMigration will be added to the top if any migration list to prepare the shema of internal data.
+// baseMigration will be added to the top if any migration list to prepare the schema of internal data.
 var baseMigration = Migration{
 	ID:          "0000_migrations_table",
 	Description: "creates table with migration data",
