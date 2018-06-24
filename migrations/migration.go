@@ -1,4 +1,4 @@
-package main
+package migration
 
 import (
 	"fmt"
@@ -7,6 +7,9 @@ import (
 
 	"github.com/jinzhu/gorm"
 )
+
+// @TODO Migrations table prefix?
+// @TODO Forward migration to passed destination level.
 
 // Migration represents a description and logic of single migration step.
 type Migration struct {
@@ -21,8 +24,8 @@ type Migration struct {
 	Rollback func(tx *gorm.DB) error `gorm:"-"`
 }
 
-// BaseMigration must be the first entry in any migration list.
-var BaseMigration = Migration{
+// baseMigration will be added to the top if any migration list to prepare the shema of internal data.
+var baseMigration = Migration{
 	ID:          "migrations_table",
 	Description: "creates table with migration data",
 	Rerform: func(tx *gorm.DB) error {
@@ -36,6 +39,8 @@ var BaseMigration = Migration{
 // Migrate applies all missing migrations to db in the order determined by the argument slice.
 // Function aborts if any unknown migrations are presented in db.
 func Migrate(db *gorm.DB, migrations []Migration) error {
+	migrations = append([]Migration{baseMigration}, migrations...)
+
 	log.Println("performing migrations...")
 	tx := db.Begin()
 
@@ -80,6 +85,8 @@ func Migrate(db *gorm.DB, migrations []Migration) error {
 // With "" as dest destMigrationLvl will roll back all migrations.
 // Function aborts if any unknown migrations are presented in db.
 func Rollback(db *gorm.DB, migrations []Migration, destMigrationLvl string) error {
+	migrations = append([]Migration{baseMigration}, migrations...)
+
 	log.Printf("performing rollback to '%v' migration level...", destMigrationLvl)
 
 	dest := -1
@@ -139,6 +146,27 @@ func Rollback(db *gorm.DB, migrations []Migration, destMigrationLvl string) erro
 	return nil
 }
 
+// Ensure whether the database corresponds to migrations.
+func Ensure(db *gorm.DB, migrations []Migration) error {
+	migrations = append([]Migration{baseMigration}, migrations...)
+
+	performed, err := loadPerformedMigrations(db, migrations)
+	if err != nil {
+		return err
+	}
+
+	for _, mig := range migrations {
+		if !performed[mig.ID] {
+			return fmt.Errorf("db does not contain all expected migrations(first missing is '%v')", mig.ID)
+		}
+	}
+
+	return nil
+}
+
+// loadPerformedMigrations returns 'set' of previously performed migrations
+// and returns error in case of any unknown migrations(not listed in the argument).
+// Passed migration list shuold contain the base migration as well.
 func loadPerformedMigrations(tx *gorm.DB, migrations []Migration) (map[string]bool, error) {
 	if !tx.HasTable(&Migration{}) {
 		return map[string]bool{}, nil

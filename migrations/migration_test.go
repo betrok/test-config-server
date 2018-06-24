@@ -1,4 +1,4 @@
-package main
+package migration
 
 import (
 	"testing"
@@ -13,7 +13,6 @@ func TestMigration(t *testing.T) {
 	}
 
 	var migrations = []Migration{
-		BaseMigration,
 		{
 			ID: "shema",
 			Rerform: func(tx *gorm.DB) error {
@@ -65,8 +64,17 @@ func TestMigration(t *testing.T) {
 		t.Fatalf("second Migrate() failed: %v", err)
 	}
 
-	if Migrate(db, []Migration{BaseMigration}) == nil {
+	if Migrate(db, []Migration{}) == nil {
 		t.Fatalf("Migrate() did not fail on unknown loaded migration")
+	}
+
+	err = Ensure(db, migrations)
+	if err != nil {
+		t.Fatalf("Ensure() failed: %v", err)
+	}
+
+	if Ensure(db, append(migrations, Migration{ID: "something"})) == nil {
+		t.Fatalf("Ensure() did not fail where it should have")
 	}
 
 	var data TestData
