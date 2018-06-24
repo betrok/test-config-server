@@ -26,7 +26,7 @@ type Migration struct {
 
 // baseMigration will be added to the top if any migration list to prepare the shema of internal data.
 var baseMigration = Migration{
-	ID:          "migrations_table",
+	ID:          "0000_migrations_table",
 	Description: "creates table with migration data",
 	Rerform: func(tx *gorm.DB) error {
 		return tx.CreateTable(&Migration{}).Error
@@ -40,8 +40,6 @@ var baseMigration = Migration{
 // Function aborts if any unknown migrations are presented in db.
 func Migrate(db *gorm.DB, migrations []Migration) error {
 	migrations = append([]Migration{baseMigration}, migrations...)
-
-	log.Println("performing migrations...")
 	tx := db.Begin()
 
 	performed, err := loadPerformedMigrations(tx, migrations)
@@ -76,8 +74,6 @@ func Migrate(db *gorm.DB, migrations []Migration) error {
 		return fmt.Errorf("failed to commit after migration complete: %v", err)
 	}
 
-	log.Println("migration: done")
-
 	return nil
 }
 
@@ -86,8 +82,6 @@ func Migrate(db *gorm.DB, migrations []Migration) error {
 // Function aborts if any unknown migrations are presented in db.
 func Rollback(db *gorm.DB, migrations []Migration, destMigrationLvl string) error {
 	migrations = append([]Migration{baseMigration}, migrations...)
-
-	log.Printf("performing rollback to '%v' migration level...", destMigrationLvl)
 
 	dest := -1
 
@@ -140,8 +134,6 @@ func Rollback(db *gorm.DB, migrations []Migration, destMigrationLvl string) erro
 	if err != nil {
 		return fmt.Errorf("failed to commit after rollback complete: %v", err)
 	}
-
-	log.Println("rollback: done")
 
 	return nil
 }
