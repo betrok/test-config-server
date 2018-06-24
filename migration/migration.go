@@ -13,7 +13,8 @@ import (
 
 // Migration represents a description and logic of single migration step.
 type Migration struct {
-	// Non-empty unique key
+	// Non-empty unique key,
+	// "0000_migrations_table" is reserved for internal usage
 	ID string `gorm:"primary_key"`
 	// Human-redable description
 	Description string

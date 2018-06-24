@@ -69,7 +69,7 @@ func TestConfigServer(t *testing.T) {
 			code:    http.StatusNotFound,
 		},
 		{
-			request: `{"Type": "Develop.mr_robot", "Data": "Database.processing"}`,
+			request: `{"Type": "database.postgres", "Data": "service.test"}`,
 			code:    http.StatusOK,
 			data: `
 			{
@@ -82,15 +82,16 @@ func TestConfigServer(t *testing.T) {
 			}`,
 		},
 		{
-			request: `{"Type": "Test.vpn", "Data": "Rabbit.log"}`,
+			request: `{"Type": "rabbit.log", "Data": "service.test"}`,
 			code:    http.StatusOK,
+			// swapped order of fields
 			data: `
 			{
+				"user": "guest",
+				"password": "guest",
 				"host": "10.0.5.42",
 				"port": "5671",
-				"virtualhost": "/",
-				"user": "guest",
-				"password": "guest"
+				"virtualhost": "/"
 			}`,
 		},
 	}
@@ -132,13 +133,13 @@ func checkQuery(t *testing.T, ts *httptest.Server, query testQuery) {
 	// Indents and order of fields should not change anything.
 	// We will unmarshal both the expected data and the reply for comparison.
 	var reply, expected interface{}
-	err = json.Unmarshal(body, reply)
+	err = json.Unmarshal(body, &reply)
 	if err != nil {
 		t.Errorf("request '%v': failed to unmarshal reply: %v\nraw body:\n`%v`", query.request, err, string(body))
 		return
 	}
 
-	err = json.Unmarshal([]byte(query.data), expected)
+	err = json.Unmarshal([]byte(query.data), &expected)
 	if err != nil {
 		t.Errorf("request '%v': failed to unmarshal expected data: %v", query.request, err)
 		return

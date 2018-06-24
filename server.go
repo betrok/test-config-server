@@ -68,7 +68,7 @@ func (s configServer) handle(c *gin.Context) {
 		})
 		return
 	default:
-		c.JSON(http.StatusOK, config.Data)
+		c.JSON(http.StatusOK, config.Data.RawMessage)
 		return
 	}
 }
