@@ -16,7 +16,13 @@ var migrations = []migration.Migration{
 		ID:          "0010_configs_table",
 		Description: "creates table with config data",
 		Rerform: func(tx *gorm.DB) error {
-			return tx.CreateTable(&Config{}).Error
+			return tx.Exec(`
+				CREATE TABLE "configs" (
+					"type" text,
+					"name" text,
+					"data" jsonb,
+					PRIMARY KEY ("type","name")
+				)`).Error
 		},
 		Rollback: func(tx *gorm.DB) error {
 			return tx.DropTable(&Config{}).Error
